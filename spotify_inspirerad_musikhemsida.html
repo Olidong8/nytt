@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="sv" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melody - Modern Musikupplevelse</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        spotify: {
+                            green: '#1DB954',
+                            dark: '#121212',
+                            darker: '#000000',
+                            light: '#181818',
+                            hover: '#282828',
+                            muted: '#b3b3b3'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for modern Spotify feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #282828;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e3e3e;
+        }
+    </style>
+</head>
+<body class="bg-spotify-darker text-white font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-black flex flex-col p-6 space-y-6 hidden md:flex z-20 shrink-0">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 text-spotify-green">
+                <i class="fa-solid fa-headphones-simple text-3xl"></i>
+                <span class="text-2xl font-bold tracking-tight text-white">Melody</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-2 text-sm font-semibold">
+                <a href="#" onclick="switchTab('home')" id="nav-home" class="flex items-center space-x-4 text-white hover:text-spotify-green transition p-2 rounded-md bg-spotify-hover">
+                    <i class="fa-solid fa-house text-lg w-5"></i>
+                    <span>Hem</span>
+                </a>
+                <a href="#" onclick="switchTab('search')" id="nav-search" class="flex items-center space-x-4 text-spotify-muted hover:text-white transition p-2 rounded-md">
+                    <i class="fa-solid fa-magnifying-glass text-lg w-5"></i>
+                    <span>Sök</span>
+                </a>
+                <a href="#" onclick="switchTab('library')" id="nav-library" class="flex items-center space-x-4 text-spotify-muted hover:text-white transition p-2 rounded-md">
+                    <i class="fa-solid fa-book-open text-lg w-5"></i>
+                    <span>Ditt Bibliotek</span>
+                </a>
+            </nav>
+
+            <hr class="border-t border-neutral-800">
+
+            <!-- Playlists Section -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-2">
+                <div class="text-xs uppercase tracking-wider text-spotify-muted font-bold px-2">Spellistor</div>
+                <div class="space-y-1 text-sm text-spotify-muted">
+                    <a href="#" onclick="loadPlaylist('chill')" class="block hover:text-white transition px-2 py-1.5 rounded truncate">Chill Vibes 2026</a>
+                    <a href="#" onclick="loadPlaylist('workout')" class="block hover:text-white transition px-2 py-1.5 rounded truncate">Workout Energy</a>
+                    <a href="#" onclick="loadPlaylist('top')" class="block hover:text-white transition px-2 py-1.5 rounded truncate">Topplistan Sverige</a>
+                    <a href="#" onclick="loadPlaylist('indie')" class="block hover:text-white transition px-2 py-1.5 rounded truncate">Indie & Alternative</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 bg-gradient-to-b from-neutral-900 to-spotify-darker overflow-y-auto relative flex flex-col">
+            
+            <!-- TOP NAVBAR -->
+            <header class="sticky top-0 bg-neutral-900/80 backdrop-blur-md px-6 py-4 flex justify-between items-center z-10 transition-all">
+                <div class="flex items-center space-x-4">
+                    <button class="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-spotify-muted hover:text-white transition">
+                        <i class="fa-solid fa-chevron-left text-sm"></i>
+                    </button>
+                    <button class="w-8 h-8 rounded-full bg-black/70 flex items-center justify-center text-spotify-muted hover:text-white transition">
+                        <i class="fa-solid fa-chevron-right text-sm"></i>
+                    </button>
+                    <!-- Mobile Menu Toggle -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-white text-xl">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="bg-white text-black font-semibold px-4 py-2 rounded-full text-sm hover:scale-105 transition">Uppgradera till Premium</button>
+                    <div class="w-9 h-9 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-sm cursor-pointer hover:scale-105 transition">
+                        <span>US</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- DYNAMIC VIEWS CONTAINER -->
+            <div id="view-container" class="p-6 md:p-8 flex-1 pb-32">
+                
+                <!-- HOME VIEW -->
+                <div id="home-view" class="space-y-8">
+                    <!-- Welcome Header -->
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight mb-6">God morgon</h1>
+                        <!-- Quick Access Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div onclick="playSong(0)" class="flex items-center bg-white/5 hover:bg-white/10 rounded-md overflow-hidden cursor-pointer transition group">
+                                <img src="https://placehold.co/80x80/1DB954/FFFFFF?text=Chill" alt="Playlist" class="w-20 h-20 object-cover">
+                                <span class="px-4 font-bold text-sm flex-1">Chill Vibes 2026</span>
+                                <div class="w-10 h-10 rounded-full bg-spotify-green text-black flex items-center justify-center mr-4 opacity-0 group-hover:opacity-100 transition shadow-lg">
+                                    <i class="fa-solid fa-play"></i>
+                                </div>
+                            </div>
+                            <div onclick="playSong(1)" class="flex items-center bg-white/5 hover:bg-white/10 rounded-md overflow-hidden cursor-pointer transition group">
+                                <img src="https://placehold.co/80x80/8B5CF6/FFFFFF?text=Workout" alt="Playlist" class="w-20 h-20 object-cover">
+                                <span class="px-4 font-bold text-sm flex-1">Workout Energy</span>
+                                <div class="w-10 h-10 rounded-full bg-spotify-green text-black flex items-center justify-center mr-4 opacity-0 group-hover:opacity-100 transition shadow-lg">
+                                    <i class="fa-solid fa-play"></i>
+                                </div>
+                            </div>
+                            <div onclick="playSong(2)" class="flex items-center bg-white/5 hover:bg-white/10 rounded-md overflow-hidden cursor-pointer transition group">
+                                <img src="https://placehold.co/80x80/EC4899/FFFFFF?text=Top" alt="Playlist" class="w-20 h-20 object-cover">
+                                <span class="px-4 font-bold text-sm flex-1">Topplistan Sverige</span>
+                                <div class="w-10 h-10 rounded-full bg-spotify-green text-black flex items-center justify-center mr-4 opacity-0 group-hover:opacity-100 transition shadow-lg">
+                                    <i class="fa-solid fa-play"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Popular Songs Section -->
+                    <section class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <h2 class="text-2xl font-bold tracking-tight">Populära låtar</h2>
+                            <a href="#" onclick="switchTab('search')" class="text-xs uppercase font-bold text-spotify-muted hover:underline tracking-wider">Visa alla</a>
+                        </div>
+                        <div id="popular-tracks-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </section>
+
+                    <!-- Popular Artists Section -->
+                    <section class="space-y-4">
+                        <h2 class="text-2xl font-bold tracking-tight">Populära artister</h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            <div class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group">
+                                <img src="https://placehold.co/300x300/333333/FFFFFF?text=The+Weeknd" alt="Artist" class="w-full aspect-square object-cover rounded-full mb-4 shadow-xl">
+                                <h3 class="font-bold truncate">The Weeknd</h3>
+                                <p class="text-sm text-spotify-muted">Artist</p>
+                            </div>
+                            <div class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group">
+                                <img src="https://placehold.co/300x300/333333/FFFFFF?text=Dua+Lipa" alt="Artist" class="w-full aspect-square object-cover rounded-full mb-4 shadow-xl">
+                                <h3 class="font-bold truncate">Dua Lipa</h3>
+                                <p class="text-sm text-spotify-muted">Artist</p>
+                            </div>
+                            <div class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group">
+                                <img src="https://placehold.co/300x300/333333/FFFFFF?text=Avicii" alt="Artist" class="w-full aspect-square object-cover rounded-full mb-4 shadow-xl">
+                                <h3 class="font-bold truncate">Avicii</h3>
+                                <p class="text-sm text-spotify-muted">Artist</p>
+                            </div>
+                            <div class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group">
+                                <img src="https://placehold.co/300x300/333333/FFFFFF?text=Billie+Eilish" alt="Artist" class="w-full aspect-square object-cover rounded-full mb-4 shadow-xl">
+                                <h3 class="font-bold truncate">Billie Eilish</h3>
+                                <p class="text-sm text-spotify-muted">Artist</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Genres Section -->
+                    <section class="space-y-4">
+                        <h2 class="text-2xl font-bold tracking-tight">Genrer och stämningar</h2>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <div onclick="filterGenre('Pop')" class="h-32 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg p-4 font-bold text-xl relative overflow-hidden cursor-pointer hover:opacity-90 transition">
+                                Pop
+                            </div>
+                            <div onclick="filterGenre('Electronic')" class="h-32 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-lg p-4 font-bold text-xl relative overflow-hidden cursor-pointer hover:opacity-90 transition">
+                                Electronic / House
+                            </div>
+                            <div onclick="filterGenre('Hip Hop')" class="h-32 bg-gradient-to-br from-amber-500 to-red-600 rounded-lg p-4 font-bold text-xl relative overflow-hidden cursor-pointer hover:opacity-90 transition">
+                                Hip Hop
+                            </div>
+                            <div onclick="filterGenre('Chill')" class="h-32 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-lg p-4 font-bold text-xl relative overflow-hidden cursor-pointer hover:opacity-90 transition">
+                                Chill & Lo-Fi
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- SEARCH VIEW (Hidden by default) -->
+                <div id="search-view" class="space-y-6 hidden">
+                    <div class="relative max-w-md">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-spotify-muted"></i>
+                        <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Vad vill du lyssna på?" class="w-full bg-spotify-light text-white pl-12 pr-4 py-3 rounded-full font-medium focus:outline-none focus:ring-2 focus:ring-white transition">
+                    </div>
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-bold tracking-tight" id="search-results-title">Sökresultat</h2>
+                        <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                            <!-- Search items appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIBRARY VIEW (Hidden by default) -->
+                <div id="library-view" class="space-y-6 hidden">
+                    <h1 class="text-3xl font-bold tracking-tight">Ditt Bibliotek</h1>
+                    <div class="bg-spotify-light p-6 rounded-lg flex items-center space-x-6">
+                        <div class="w-32 h-32 bg-gradient-to-br from-purple-700 to-blue-500 rounded-md flex items-center justify-center text-4xl shadow-xl">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs uppercase font-bold tracking-wider text-spotify-muted">Spellista</span>
+                            <h2 class="text-3xl font-extrabold mt-1">Gillade låtar</h2>
+                            <p class="text-sm text-spotify-muted mt-2" id="liked-count">0 låtar sparade</p>
+                        </div>
+                    </div>
+                    <div id="library-tracks-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- PERSISTENT BOTTOM MUSIC PLAYER BAR -->
+    <footer class="h-24 bg-black border-t border-neutral-800 px-4 flex items-center justify-between z-30 shrink-0">
+        
+        <!-- Currently Playing Song Info -->
+        <div class="flex items-center space-x-4 w-1/4 min-w-[180px]">
+            <img id="player-img" src="https://placehold.co/60x60/333333/FFFFFF?text=Song" alt="Album Art" class="w-14 h-14 rounded-md object-cover shadow">
+            <div class="overflow-hidden">
+                <h4 id="player-title" class="text-sm font-semibold truncate hover:underline cursor-pointer">Välj en låt</h4>
+                <p id="player-artist" class="text-xs text-spotify-muted truncate">Melody Artist</p>
+            </div>
+            <button onclick="toggleLikeCurrent()" id="player-like-btn" class="text-spotify-muted hover:text-white transition text-lg">
+                <i class="fa-regular fa-heart"></i>
+            </button>
+        </div>
+
+        <!-- Player Controls & Timeline -->
+        <div class="flex flex-col items-center max-w-xl w-2/4 space-y-2">
+            <div class="flex items-center space-x-6">
+                <button onclick="toggleShuffle()" id="shuffle-btn" class="text-spotify-muted hover:text-white transition text-sm">
+                    <i class="fa-solid fa-shuffle"></i>
+                </button>
+                <button onclick="prevSong()" class="text-spotify-muted hover:text-white transition text-lg">
+                    <i class="fa-solid fa-backward-step"></i>
+                </button>
+                <button onclick="togglePlayPause()" id="play-pause-btn" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition shadow-lg">
+                    <i id="play-pause-icon" class="fa-solid fa-play text-sm ml-0.5"></i>
+                </button>
+                <button onclick="nextSong()" class="text-spotify-muted hover:text-white transition text-lg">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+                <button onclick="toggleRepeat()" id="repeat-btn" class="text-spotify-muted hover:text-white transition text-sm">
+                    <i class="fa-solid fa-repeat"></i>
+                </button>
+            </div>
+            <!-- Timeline -->
+            <div class="flex items-center space-x-3 w-full text-xs text-spotify-muted">
+                <span id="current-time">0:00</span>
+                <input type="range" id="progress-bar" value="0" min="0" max="100" oninput="seekSong(this.value)" class="w-full h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-white hover:accent-spotify-green">
+                <span id="total-duration">0:00</span>
+            </div>
+        </div>
+
+        <!-- Volume & Extra Controls -->
+        <div class="flex items-center justify-end space-x-4 w-1/4 min-w-[180px]">
+            <button class="text-spotify-muted hover:text-white transition"><i class="fa-solid fa-list"></i></button>
+            <button class="text-spotify-muted hover:text-white transition"><i class="fa-solid fa-laptop-code"></i></button>
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleMute()" id="volume-icon" class="text-spotify-muted hover:text-white transition"><i class="fa-solid fa-volume-high"></i></button>
+                <input type="range" id="volume-bar" value="80" min="0" max="100" oninput="adjustVolume(this.value)" class="w-20 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-white hover:accent-spotify-green">
+            </div>
+        </div>
+    </footer>
+
+    <!-- MOBILE MENU OVERLAY -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black/90 z-50 flex flex-col p-8 space-y-6 hidden">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-3 text-spotify-green">
+                <i class="fa-solid fa-headphones-simple text-3xl"></i>
+                <span class="text-2xl font-bold text-white">Melody</span>
+            </div>
+            <button onclick="toggleMobileMenu()" class="text-white text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="space-y-4 text-xl font-bold">
+            <a href="#" onclick="switchTab('home'); toggleMobileMenu()" class="block text-white">Hem</a>
+            <a href="#" onclick="switchTab('search'); toggleMobileMenu()" class="block text-spotify-muted">Sök</a>
+            <a href="#" onclick="switchTab('library'); toggleMobileMenu()" class="block text-spotify-muted">Ditt Bibliotek</a>
+        </nav>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Track Database with public preview/ambient audio samples
+        const tracks = [
+            {
+                id: 0,
+                title: "Midnight City Drive",
+                artist: "The Synthwave Project",
+                album: "Neon Horizons",
+                genre: "Electronic",
+                duration: "3:45",
+                cover: "https://placehold.co/300x300/1e1b4b/38bdf8?text=Synth",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                liked: false
+            },
+            {
+                id: 1,
+                title: "Electric Summer",
+                artist: "Dua & Friends",
+                album: "Club Essentials",
+                genre: "Pop",
+                duration: "2:58",
+                cover: "https://placehold.co/300x300/831843/f472b6?text=Summer",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                liked: true
+            },
+            {
+                id: 2,
+                title: "Lo-Fi Coffee Break",
+                artist: "Chillhop Cat",
+                album: "Study Beats Vol. 4",
+                genre: "Chill",
+                duration: "4:12",
+                cover: "https://placehold.co/300x300/064e3b/34d399?text=LoFi",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                liked: false
+            },
+            {
+                id: 3,
+                title: "Urban Streetlife",
+                artist: "Metro Rhymes",
+                album: "City Lights",
+                genre: "Hip Hop",
+                duration: "3:20",
+                cover: "https://placehold.co/300x300/78350f/fbbf24?text=HipHop",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                liked: false
+            },
+            {
+                id: 4,
+                title: "Starlight Echoes",
+                artist: "Avicii Tribute Band",
+                album: "EDM Anthems",
+                genre: "Electronic",
+                duration: "3:55",
+                cover: "https://placehold.co/300x300/312e81/818cf8?text=Echoes",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                liked: true
+            },
+            {
+                id: 5,
+                title: "Sunset Boulevard",
+                artist: "The Weeknd Style",
+                album: "After Hours Mood",
+                genre: "Pop",
+                duration: "4:05",
+                cover: "https://placehold.co/300x300/581c87/c084fc?text=Sunset",
+                src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
+                liked: false
+            }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let audio = new Audio();
+        audio.volume = 0.8;
+
+        // Initialize App
+        window.onload = function() {
+            renderPopularTracks();
+            renderLibrary();
+            setupAudioEvents();
+        };
+
+        // Render Popular Tracks Grid on Home
+        function renderPopularTracks() {
+            const grid = document.getElementById('popular-tracks-grid');
+            grid.innerHTML = tracks.map(track => `
+                <div onclick="playSong(${track.id})" class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group relative">
+                    <div class="relative mb-4">
+                        <img src="${track.cover}" alt="${track.title}" class="w-full aspect-square object-cover rounded-md shadow-lg">
+                        <div class="absolute bottom-2 right-2 w-12 h-12 rounded-full bg-spotify-green text-black flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all shadow-xl">
+                            <i class="fa-solid fa-play ml-0.5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-bold truncate">${track.title}</h3>
+                    <p class="text-sm text-spotify-muted truncate mt-1">${track.artist}</p>
+                </div>
+            `).join('');
+        }
+
+        // Play Song Function
+        function playSong(index) {
+            currentTrackIndex = index;
+            const track = tracks[currentTrackIndex];
+            
+            audio.src = track.src;
+            audio.play().then(() => {
+                isPlaying = true;
+                updatePlayPauseButton();
+                updatePlayerUI();
+            }).catch(e => {
+                console.log("Autoplay blocked or stream error:", e);
+                isPlaying = false;
+                updatePlayPauseButton();
+            });
+        }
+
+        // Toggle Play / Pause
+        function togglePlayPause() {
+            if (!audio.src) {
+                playSong(0);
+                return;
+            }
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+            } else {
+                audio.play();
+                isPlaying = true;
+            }
+            updatePlayPauseButton();
+        }
+
+        function updatePlayPauseButton() {
+            const icon = document.getElementById('play-pause-icon');
+            if (isPlaying) {
+                icon.className = "fa-solid fa-pause text-sm";
+            } else {
+                icon.className = "fa-solid fa-play text-sm ml-0.5";
+            }
+        }
+
+        function updatePlayerUI() {
+            const track = tracks[currentTrackIndex];
+            document.getElementById('player-title').innerText = track.title;
+            document.getElementById('player-artist').innerText = track.artist;
+            document.getElementById('player-img').src = track.cover;
+            
+            const likeBtn = document.getElementById('player-like-btn');
+            if (track.liked) {
+                likeBtn.innerHTML = '<i class="fa-solid fa-heart text-spotify-green"></i>';
+            } else {
+                likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+            }
+        }
+
+        // Audio Events & Timeline Updates
+        function setupAudioEvents() {
+            audio.addEventListener('timeupdate', () => {
+                if (audio.duration) {
+                    const progress = (audio.currentTime / audio.duration) * 100;
+                    document.getElementById('progress-bar').value = progress;
+                    document.getElementById('current-time').innerText = formatTime(audio.currentTime);
+                    document.getElementById('total-duration').innerText = formatTime(audio.duration);
+                }
+            });
+
+            audio.addEventListener('ended', () => {
+                if (isRepeat) {
+                    audio.play();
+                } else {
+                    nextSong();
+                }
+            });
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function seekSong(val) {
+            if (audio.duration) {
+                audio.currentTime = (val / 100) * audio.duration;
+            }
+        }
+
+        function adjustVolume(val) {
+            audio.volume = val / 100;
+        }
+
+        function toggleMute() {
+            audio.muted = !audio.muted;
+            const volIcon = document.getElementById('volume-icon');
+            volIcon.innerHTML = audio.muted ? '<i class="fa-solid fa-volume-xmark text-red-500"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+        }
+
+        function nextSong() {
+            if (isShuffle) {
+                currentTrackIndex = Math.floor(Math.random() * tracks.length);
+            } else {
+                currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            }
+            playSong(currentTrackIndex);
+        }
+
+        function prevSong() {
+            currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+            playSong(currentTrackIndex);
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            const btn = document.getElementById('shuffle-btn');
+            btn.classList.toggle('text-spotify-green', isShuffle);
+        }
+
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            const btn = document.getElementById('repeat-btn');
+            btn.classList.toggle('text-spotify-green', isRepeat);
+        }
+
+        function toggleLikeCurrent() {
+            tracks[currentTrackIndex].liked = !tracks[currentTrackIndex].liked;
+            updatePlayerUI();
+            renderLibrary();
+        }
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('search-view').classList.add('hidden');
+            document.getElementById('library-view').classList.add('hidden');
+
+            document.getElementById('nav-home').className = "flex items-center space-x-4 text-spotify-muted hover:text-white transition p-2 rounded-md";
+            document.getElementById('nav-search').className = "flex items-center space-x-4 text-spotify-muted hover:text-white transition p-2 rounded-md";
+            document.getElementById('nav-library').className = "flex items-center space-x-4 text-spotify-muted hover:text-white transition p-2 rounded-md";
+
+            if (tabName === 'home') {
+                document.getElementById('home-view').classList.remove('hidden');
+                document.getElementById('nav-home').className = "flex items-center space-x-4 text-white hover:text-spotify-green transition p-2 rounded-md bg-spotify-hover";
+            } else if (tabName === 'search') {
+                document.getElementById('search-view').classList.remove('hidden');
+                document.getElementById('nav-search').className = "flex items-center space-x-4 text-white hover:text-spotify-green transition p-2 rounded-md bg-spotify-hover";
+            } else if (tabName === 'library') {
+                document.getElementById('library-view').classList.remove('hidden');
+                document.getElementById('nav-library').className = "flex items-center space-x-4 text-white hover:text-spotify-green transition p-2 rounded-md bg-spotify-hover";
+                renderLibrary();
+            }
+        }
+
+        // Search functionality
+        function handleSearch(query) {
+            const resultsGrid = document.getElementById('search-results-grid');
+            const title = document.getElementById('search-results-title');
+            
+            if (!query.trim()) {
+                resultsGrid.innerHTML = '';
+                title.innerText = "Sökresultat";
+                return;
+            }
+
+            const filtered = tracks.filter(t => 
+                t.title.toLowerCase().includes(query.toLowerCase()) || 
+                t.artist.toLowerCase().includes(query.toLowerCase()) ||
+                t.genre.toLowerCase().includes(query.toLowerCase())
+            );
+
+            title.innerText = `Resultat för "${query}" (${filtered.length})`;
+
+            if (filtered.length === 0) {
+                resultsGrid.innerHTML = '<p class="text-spotify-muted col-span-full">Inga låtar hittades.</p>';
+                return;
+            }
+
+            resultsGrid.innerHTML = filtered.map(track => `
+                <div onclick="playSong(${track.id})" class="bg-spotify-light p-4 rounded-lg hover:bg-spotify-hover transition cursor-pointer group relative">
+                    <div class="relative mb-4">
+                        <img src="${track.cover}" alt="${track.title}" class="w-full aspect-square object-cover rounded-md shadow-lg">
+                        <div class="absolute bottom-2 right-2 w-12 h-12 rounded-full bg-spotify-green text-black flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all shadow-xl">
+                            <i class="fa-solid fa-play ml-0.5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-bold truncate">${track.title}</h3>
+                    <p class="text-sm text-spotify-muted truncate mt-1">${track.artist}</p>
+                </div>
+            `).join('');
+        }
+
+        // Genre Filter helper
+        function filterGenre(genreName) {
+            switchTab('search');
+            document.getElementById('search-input').value = genreName;
+            handleSearch(genreName);
+        }
+
+        // Playlist quick loaders
+        function loadPlaylist(type) {
+            switchTab('home');
+            playSong(0);
+        }
+
+        // Render Library
+        function renderLibrary() {
+            const likedTracks = tracks.filter(t => t.liked);
+            document.getElementById('liked-count').innerText = `${likedTracks.length} låtar sparade`;
+            const list = document.getElementById('library-tracks-list');
+
+            if (likedTracks.length === 0) {
+                list.innerHTML = '<p class="text-spotify-muted py-4">Du har inte sparat några låtar ännu. Klicka på hjärtat vid spelaren för att gilla en låt!</p>';
+                return;
+            }
+
+            list.innerHTML = likedTracks.map(track => `
+                <div onclick="playSong(${track.id})" class="flex items-center justify-between p-3 hover:bg-white/5 rounded-md cursor-pointer transition group">
+                    <div class="flex items-center space-x-4">
+                        <img src="${track.cover}" alt="" class="w-12 h-12 rounded object-cover">
+                        <div>
+                            <h4 class="font-semibold text-white group-hover:text-spotify-green transition">${track.title}</h4>
+                            <p class="text-xs text-spotify-muted">${track.artist}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-spotify-muted">${track.duration}</span>
+                </div>
+            `).join('');
+        }
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
